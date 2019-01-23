@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>image/components/close_hover.ico</file>
+        <file>image/components/close_normal.ico</file>
+        <file>image/components/frequency.png</file>
+        <file>image/components/check.png</file>
+        <file>image/components/uncheck.png</file>
+        <file>image/components/warning.png</file>
+    </qresource>
+</RCC>
