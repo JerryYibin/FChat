@@ -65,7 +65,7 @@ void ProcessControl::LoadProgramedAmplitude2List()
             if(strColumn1.contains("延时启动"))
             {
                 _objCell = objExcel.cellAt(iRow, 2);
-                processData.DelayStartTimer = _objCell->value().toFloat() * 1000;
+                processData.DelayStartTimer = _objCell->value().toFloat() * 100;
             }
             else if(strColumn1.contains("振幅"))
             {
@@ -76,7 +76,7 @@ void ProcessControl::LoadProgramedAmplitude2List()
                 _objCell = objExcel.cellAt(iRow, 1);
                 tmpPair.first = _objCell->value().toInt();
                 _objCell = objExcel.cellAt(iRow, 2);
-                tmpPair.second = _objCell->value().toDouble() * 1000;
+                tmpPair.second = _objCell->value().toDouble() * 100;
                 processData.programList.append(tmpPair);
             }
             iRow++;

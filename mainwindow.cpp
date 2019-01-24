@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowFlags(Qt::FramelessWindowHint);
     this->setWindowTitle("超高频超声波振动系统");
     this->setWindowIcon(QIcon(":/image/components/frequency.png"));
-    ui->headTitle->setTitle("超高频超声波振动系统");
+    ui->headTitle->setTitle("超高频超声波振动系统  1.0.1");
     ui->headTitle->setImage(QImage(":/image/components/frequency.png"));
     connect(ui->headTitle, SIGNAL(signalBtnClicked()), this, SLOT(slotCloseClicked()));
 
@@ -94,20 +94,19 @@ void MainWindow::timerEvent(QTimerEvent *event)
     if(event->timerId() == m_iTime)
     {
         m_SecondCounter++;
+        tmpAmplitude = m_pProcessControl->m_RealTimeUpdate.m_amplitude;
+        tmpFrequency = m_pProcessControl->m_RealTimeUpdate.m_frequency;
+        tmpTotalTime = m_pProcessControl->m_RealTimeUpdate.m_totalTime;
+        m_pFrequencyDisplay->setTheActualParameters(tmpAmplitude, tmpFrequency, tmpTotalTime);
+
         if(m_pProcessControl->CheckStrategyProcess() == false)
         {
             m_pFrequencyDisplay->setEditValid(true);
             stopSaveRecord();
             return;
         }
-        if((m_SecondCounter % 10) == 0) //10msec
-        {
-            tmpAmplitude = m_pProcessControl->m_RealTimeUpdate.m_amplitude;
-            tmpFrequency = m_pProcessControl->m_RealTimeUpdate.m_frequency;
-            tmpTotalTime = m_pProcessControl->m_RealTimeUpdate.m_totalTime;
-            m_pFrequencyDisplay->setTheActualParameters(tmpAmplitude, tmpFrequency, tmpTotalTime);
-        }
-        if((m_SecondCounter % 1000) == 0) //1sec
+
+        if((m_SecondCounter % 100) == 0) //1sec
         {
             m_SecondCounter = 0;
             m_pFrequencyDisplay->addData(QPointF(m_pProcessControl->m_RealTimeUpdate.m_totalTime,
@@ -125,7 +124,7 @@ void MainWindow::timerEvent(QTimerEvent *event)
                                    QDateTime::currentDateTime().toString("yyyy/MM/d hh:mm:ss:zzz"));
                 ++m_iDocumentCurrentRow;
 
-                if(m_SecondCounter%10000 == 0)
+                if(m_SecondCounter % 1000 == 0) //10sec
                 {
                     m_pDocument->write("D1", "文件保存时间:\n"
                                        + QDateTime::currentDateTime().toString("yyyy/MM/d hh:mm:ss:zzz"));
@@ -153,13 +152,6 @@ void MainWindow::slotStart()
         messageBox.exec();
         return;
     }
-    if(m_iTime != 0)
-    {
-        this->killTimer(m_iTime);
-    }
-    m_pFrequencyDisplay->setEditValid(false);
-    m_SecondCounter = 0;
-    m_iTime = this->startTimer(1);
     if(isPause == true)
     {
         if(m_pProcessControl->processData.processMode == ProcessControl::ContinueMode)
@@ -171,6 +163,8 @@ void MainWindow::slotStart()
                 m_pProcessControl->processData.durationTimer,
                 m_pProcessControl->processData.stopTimer,
                 m_pProcessControl->processData.amplitudeSetting);
+    m_pProcessControl->processData.durationTimer /= 10;
+    m_pProcessControl->processData.stopTimer /= 10;
     m_pProcessControl->processData.durationTimerBakup =
             m_pProcessControl->processData.durationTimer;
     m_pProcessControl->processData.stopTimerBakup =
@@ -238,6 +232,14 @@ void MainWindow::slotStart()
     m_pDocument->write("D3", "采集时间");
     m_pDocument->save();
     m_iDocumentCurrentRow = 4;
+
+    if(m_iTime != 0)
+    {
+        this->killTimer(m_iTime);
+    }
+    m_pFrequencyDisplay->setEditValid(false);
+    m_SecondCounter = 0;
+    m_iTime = this->startTimer(10);
 }
 
 void MainWindow::slotStop()
