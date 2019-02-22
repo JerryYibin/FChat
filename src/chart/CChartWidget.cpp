@@ -29,7 +29,7 @@ CChartWidget::CChartWidget(QScrollArea *pControlScroll, QWidget *parent)
     , m_bReteScale(false)
     , m_bAdaptiveInterface(true)
     , m_strXUnit("秒")
-    , m_strYUnit("")
+    , m_strYUnit("Hz")
 {
     m_pControlScroll->setAlignment(Qt::AlignRight|Qt::AlignBottom);
     updateCalculateWidth();
