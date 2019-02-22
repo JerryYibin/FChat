@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     m_iTime(0),
-    m_pDocument(NULL)
+    m_pDocument(nullptr)
 {
     ui->setupUi(this);
     this->setWindowFlag(Qt::WindowMinMaxButtonsHint, false);
@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     double tmpAmplitude = m_pProcessControl->m_RealTimeUpdate.m_amplitude;
     double tmpFrequency = m_pProcessControl->m_RealTimeUpdate.m_frequency;
     double tmpTotalTime = m_pProcessControl->m_RealTimeUpdate.m_totalTime;
-    m_pFrequencyDisplay->setTheActualParameters(tmpAmplitude, tmpFrequency, tmpTotalTime);
+    m_pFrequencyDisplay->setTheActualParameters(tmpAmplitude, tmpFrequency, static_cast<int>(tmpTotalTime));
     m_pFrequencyDisplay->setResonanceFrequency(0.0);
     connect(m_pProcessControl, SIGNAL(signalResonanceFrequency(double)), this, SLOT(slotFrequencyUpdate(double)));
     connect(m_pOpcUaClient, SIGNAL(alarmOnlyReadChanged(bool)), this, SLOT(slotAlarmStateUpdate(bool)));
@@ -97,7 +97,7 @@ void MainWindow::timerEvent(QTimerEvent *event)
         tmpAmplitude = m_pProcessControl->m_RealTimeUpdate.m_amplitude;
         tmpFrequency = m_pProcessControl->m_RealTimeUpdate.m_frequency;
         tmpTotalTime = m_pProcessControl->m_RealTimeUpdate.m_totalTime;
-        m_pFrequencyDisplay->setTheActualParameters(tmpAmplitude, tmpFrequency, tmpTotalTime);
+        m_pFrequencyDisplay->setTheActualParameters(tmpAmplitude, tmpFrequency, static_cast<int>(tmpTotalTime));
 
         if(m_pProcessControl->CheckStrategyProcess() == false)
         {
@@ -180,13 +180,29 @@ void MainWindow::slotStart()
                                                  m_pProcessControl->processData.RecordSavingPath);
     m_pFrequencyDisplay->getPgSpectrumPath(m_pProcessControl->processData.ProgramAmplitudePath);
     m_pProcessControl->isScannFrequency = false;
-//    if(m_pProcessControl->processData.RecordSavingPath.contains(".xlsx") == false)
-//    {
-//        /*need a message show on screen*/
-//        return;
-//    }
+
+    QDir recordDir;
+    if(recordDir.exists(m_pProcessControl->processData.RecordSavingPath) == false)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowIcon(QIcon(":/image/components/warning.png"));
+        messageBox.setWindowTitle("警告");
+        messageBox.setText("请确保保存文件路径是有效的。");
+        messageBox.exec();
+        return;
+    }
+
     if(m_pProcessControl->processData.processMode == ProcessControl::ProgramMode)
     {
+        if(recordDir.exists(m_pProcessControl->processData.ProgramAmplitudePath) == false)
+        {
+            QMessageBox messageBox;
+            messageBox.setWindowIcon(QIcon(":/image/components/warning.png"));
+            messageBox.setWindowTitle("警告");
+            messageBox.setText("请确保导入文件路径是有效的。");
+            messageBox.exec();
+            return;
+        }
         if(m_pProcessControl->processData.ProgramAmplitudePath.contains(".xlsx") == false)
         {
             QMessageBox messageBox;
@@ -338,7 +354,7 @@ void MainWindow::stopSaveRecord()
                            + QDateTime::currentDateTime().toString("yyyy/MM/d hh:mm:ss:zzz"));
         m_pDocument->save();
         delete m_pDocument;
-        m_pDocument = NULL;
+        m_pDocument = nullptr;
     }
     m_iDocumentCurrentRow = 4;
 }

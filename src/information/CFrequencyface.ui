@@ -288,6 +288,12 @@ background-color: rgb(5, 42, 64);</string>
              <layout class="QVBoxLayout" name="verticalLayout_9">
               <item>
                <widget class="QRadioButton" name="cvnButton">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="font">
                  <font>
                   <family>微软雅黑 Light</family>
@@ -490,10 +496,10 @@ background-color: rgb(5, 42, 64);</string>
                  <number>1</number>
                 </property>
                 <property name="minimum">
-                 <double>1.000000000000000</double>
+                 <double>10.000000000000000</double>
                 </property>
                 <property name="maximum">
-                 <double>100.000000000000000</double>
+                 <double>80.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -747,7 +753,7 @@ background-color: rgb(5, 42, 64);</string>
 QCheckBox::indicator::checked{image: url(:/image/components/check.png);}QCheckBox::indicator::unchecked{ image: url(:/image/components/uncheck.png);};</string>
           </property>
           <property name="text">
-           <string>频率下线</string>
+           <string>频率下线(Hz)</string>
           </property>
          </widget>
         </item>
@@ -794,7 +800,7 @@ background-color: rgb(5, 42, 64);</string>
 QCheckBox::indicator::checked{image: url(:/image/components/check.png);}QCheckBox::indicator::unchecked{ image: url(:/image/components/uncheck.png);};</string>
           </property>
           <property name="text">
-           <string>工作时长</string>
+           <string>工作时长(s)</string>
           </property>
          </widget>
         </item>
