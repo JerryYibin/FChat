@@ -5,6 +5,8 @@
 #include <QTimerEvent>
 
 #include "src/FrequencyDisplay.h"
+#include "src/components/CustomXYSeries.h"
+#include "src/components/CustomValueAxis.h"
 #include "src/backend/opcuamachinebackend.h"
 #include "src/backend/processcontrol.h"
 #include "xlsxdocument.h"
@@ -35,19 +37,31 @@ private:
     QXlsx::Document *m_pDocument;
     int             m_iDocumentCurrentRow;
     bool isPause;
+    CustomValueAxis *m_pTimeXAxis;
+    CustomValueAxis *m_pAmpLeftYAxis;
+    CustomValueAxis *m_pFreqRightYAxis;
+    CustomXYSeries *m_pFreqXYSeries;
+    CustomXYSeries *m_pAmpXYSeries;
+    QList<QPointF> m_FreqPoints;
+    QList<QPointF> m_AmpPoints;
 
 public slots:
     void slotFrequencyUpdate(double tmpFrequency);
+    void slotInputAmplitudeChanged(double inputAmplitude);
     void slotStart();
     void slotStop();
     void slotPause();
     void slotResonanceFrequencyPressed();
     void slotResonanceFrequencyReleased();
     void slotCloseClicked();
+    void slotMinimizeClicked();
     void slotAlarmStateUpdate(bool value);
+    void slotAmplitudeCompensation();
+    void slotAlarmReset();
 
 private:
     void updateProcessModeAndControlLimit();
+    void initializeGraphSetting();
 public:
     void stopSaveRecord();
 };

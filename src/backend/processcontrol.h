@@ -55,9 +55,13 @@ public:
     DATA_PROCESS processData;
     DATAUPDATE m_RealTimeUpdate;
     bool isScannFrequency;
+private:
+    double m_AmplitudeDeviation;
 public:
     void LoadProgramedAmplitude2List();
     bool CheckStrategyProcess();
+    void CalibrationAmplitude();
+    void SetNewUpdateAmplitude();
 signals:
     void signalResonanceFrequency(double value);
 public slots:

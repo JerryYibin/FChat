@@ -4,11 +4,10 @@
 #include "xlsxcell.h"
 #include <QDir>
 #include <QPair>
-ProcessControl* ProcessControl::_instance = 0;
-
+ProcessControl* ProcessControl::_instance = nullptr;
 ProcessControl* ProcessControl::Instance(QObject *parent)
 {
-    if(_instance == 0){
+    if(_instance == nullptr){
         _instance = new ProcessControl(parent);
     }
     return _instance;
@@ -17,6 +16,7 @@ ProcessControl* ProcessControl::Instance(QObject *parent)
 ProcessControl::ProcessControl(QObject *parent):QObject(parent)
 {
     isScannFrequency = false;
+    m_AmplitudeDeviation = 1.0;
     m_RealTimeUpdate.m_amplitude = 0.0;
     m_RealTimeUpdate.m_frequency = 0.0;
     m_RealTimeUpdate.m_totalTime = 0;
@@ -35,7 +35,7 @@ void ProcessControl::slotFrequencyUpdate(qint16 tmpFrequency)
 
 void ProcessControl::slotAmplitudeUpdate(qint16 tmpAmplitude)
 {
-    m_RealTimeUpdate.m_amplitude = HEX2AMPLITUDE(tmpAmplitude) * processData.param1 * processData.param2;
+    m_RealTimeUpdate.m_amplitude = HEX2AMPLITUDE(tmpAmplitude) * m_AmplitudeDeviation* processData.param1 * processData.param2;
 }
 
 void ProcessControl::LoadProgramedAmplitude2List()
@@ -100,8 +100,11 @@ bool ProcessControl::CheckStrategyProcess()
     switch(processData.controlLimit)
     {
     case ProcessControl::FrequencyLimit:
-        if(m_RealTimeUpdate.m_frequency < processData.lowerFrequencyLimit)
+        if(m_RealTimeUpdate.m_totalTime > 5)
+        {
+            if(m_RealTimeUpdate.m_frequency < processData.lowerFrequencyLimit)
             bResult = false;
+        }
         break;
     case ProcessControl::TimeLimit:
         if(m_RealTimeUpdate.m_totalTime > processData.upperTimeLimit)
@@ -180,4 +183,16 @@ bool ProcessControl::CheckStrategyProcess()
         break;
     }
     return bResult;
+}
+
+void ProcessControl::SetNewUpdateAmplitude()
+{
+    OpcUaMachineBackend* _pOpcUaClientObj = OpcUaMachineBackend::Instance(this);
+    qint16 tmpAmplitude = AMPLITUDE2HEX(static_cast<qint16>(processData.amplitudeSetting));
+    _pOpcUaClientObj->machineWriteAmplitude(tmpAmplitude);
+}
+
+void ProcessControl::CalibrationAmplitude()
+{
+    m_AmplitudeDeviation = processData.amplitudeSetting/m_RealTimeUpdate.m_amplitude;
 }

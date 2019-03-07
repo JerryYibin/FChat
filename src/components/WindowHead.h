@@ -20,6 +20,7 @@ public:
 
 signals:
     void signalBtnClicked();
+    void signalMinimizeClicked();
 
 private:
     Ui::WindowHead *ui;

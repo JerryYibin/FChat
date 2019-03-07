@@ -31,6 +31,10 @@ CFrequencyFace::CFrequencyFace(QWidget *parent) :
     connect(ui->pauseBt,&QPushButton::clicked,this,&CFrequencyFace::slotPause);
     /*stop*/
     connect(ui->stopBt,&QPushButton::clicked,this,&CFrequencyFace::slotStop);
+    /*amplitudeCompensation*/
+    connect(ui->amplitudeCompensation, &QPushButton::clicked, this, &CFrequencyFace::amplitudeCompensation);
+    /*alarm reset*/
+    connect(ui->alarmReset, &QPushButton::clicked, this, &CFrequencyFace::alarmReset);
 }
 
 CFrequencyFace::~CFrequencyFace()
@@ -90,12 +94,28 @@ void CFrequencyFace::setEditvaild(bool valid)
     ui->lineEdit_serialNum->setReadOnly(!valid);
     ui->lineEdit_savePath->setReadOnly(!valid);
     this->setBtnEnabled(ui->savePathBt, valid);
+    this->setBtnEnabled(ui->amplitudeCompensation, valid);
+    this->setBtnEnabled(ui->alarmReset, valid);
     ui->cvnButton->setEnabled(valid);
-    ui->ivnButton->setEnabled(valid);
     ui->pvnButton->setEnabled(valid);
-    ui->lineEdit_onceTime->setReadOnly(!valid);
-    ui->lineEdit_interval->setReadOnly(!valid);
-    ui->spinBox_inputAmplitude->setReadOnly(!valid);
+
+    ui->ivnButton->setEnabled(valid);
+    ui->changeProperty->setEnabled(valid);
+    if((ui->ivnButton->isChecked() || ui->cvnButton->isChecked()) && valid == false)
+    {
+        if(!ui->changeProperty->isChecked())
+        {
+            ui->lineEdit_onceTime->setReadOnly(!valid);
+            ui->lineEdit_interval->setReadOnly(!valid);
+            ui->spinBox_inputAmplitude->setReadOnly(!valid);
+        }
+    }
+    else {
+        ui->lineEdit_onceTime->setReadOnly(!valid);
+        ui->lineEdit_interval->setReadOnly(!valid);
+        ui->spinBox_inputAmplitude->setReadOnly(!valid);
+    }
+
     ui->lineEdit_zhenDong->setReadOnly(!valid);
     this->setBtnEnabled(ui->zhendongBt, valid);
     ui->folBox->setEnabled(valid);
@@ -213,6 +233,11 @@ void CFrequencyFace::resetBtState()
     ui->stopBt->setDisabled(true);
 }
 
+void CFrequencyFace::setStateColor(const QString &color)
+{
+    ui->stateWidget->setStyleSheet(QString("QWidget{border-radius: %1px; background-color: %2;}").arg(ui->stateWidget->width()/2).arg(color));
+}
+
 void CFrequencyFace::paintEvent(QPaintEvent *event)
 {
     QWidget::paintEvent(event);
@@ -302,4 +327,28 @@ void CFrequencyFace::on_updateFrequencyBt_pressed()
 void CFrequencyFace::on_updateFrequencyBt_released()
 {
     emit endUpdateFrequencySig();
+}
+
+void CFrequencyFace::on_lineEdit_onceTime_editingFinished()
+{
+    if(!ui->changeProperty->isEnabled() && ui->changeProperty->isChecked())
+    {
+        emit onceTimeChanged(ui->lineEdit_onceTime->text().toInt());
+    }
+}
+
+void CFrequencyFace::on_lineEdit_interval_editingFinished()
+{
+    if(!ui->changeProperty->isEnabled() && ui->changeProperty->isChecked())
+    {
+        emit intervalChanged(ui->lineEdit_interval->text().toInt());
+    }
+}
+
+void CFrequencyFace::on_spinBox_inputAmplitude_editingFinished()
+{
+    if(!ui->changeProperty->isEnabled() && ui->changeProperty->isChecked())
+    {
+        emit inputAmplitudeChanged(ui->spinBox_inputAmplitude->value());
+    }
 }

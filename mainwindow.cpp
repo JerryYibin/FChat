@@ -5,7 +5,6 @@
 #include <QMessageBox>
 #include <QIcon>
 
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -13,13 +12,14 @@ MainWindow::MainWindow(QWidget *parent) :
     m_pDocument(nullptr)
 {
     ui->setupUi(this);
-    this->setWindowFlag(Qt::WindowMinMaxButtonsHint, false);
+//    this->setWindowFlag(Qt::WindowMinMaxButtonsHint, false);
     this->setWindowFlags(Qt::FramelessWindowHint);
     this->setWindowTitle("超高频超声波振动系统");
     this->setWindowIcon(QIcon(":/image/components/frequency.png"));
     ui->headTitle->setTitle("超高频超声波振动系统  1.0.1");
     ui->headTitle->setImage(QImage(":/image/components/frequency.png"));
     connect(ui->headTitle, SIGNAL(signalBtnClicked()), this, SLOT(slotCloseClicked()));
+    connect(ui->headTitle, SIGNAL(signalMinimizeClicked()), this, SLOT(slotMinimizeClicked()));
 
     m_pFrequencyDisplay = new FrequencyDisplay(this);
     ui->verticalLayout->addWidget(m_pFrequencyDisplay);
@@ -29,6 +29,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_pFrequencyDisplay, SIGNAL(pauseSig()), this, SLOT(slotPause()));
     connect(m_pFrequencyDisplay, SIGNAL(updateFrequencySig()), this, SLOT(slotResonanceFrequencyPressed()));
     connect(m_pFrequencyDisplay, SIGNAL(endUpdateFrequencySig()), this, SLOT(slotResonanceFrequencyReleased()));
+    connect(m_pFrequencyDisplay, SIGNAL(amplitudeCompensation()), this, SLOT(slotAmplitudeCompensation()));
+    connect(m_pFrequencyDisplay, SIGNAL(alarmReset()), this, SLOT(slotAlarmReset()));
+    connect(m_pFrequencyDisplay, SIGNAL(inputAmplitudeChanged(double)), this, SLOT(slotInputAmplitudeChanged(double)));
+
+    initializeGraphSetting();
+
     m_pOpcUaClient = OpcUaMachineBackend::Instance(this);
     if (m_pOpcUaClient->connected())
         m_pOpcUaClient->disconnectFromEndpoint();
@@ -59,11 +65,14 @@ MainWindow::MainWindow(QWidget *parent) :
     if(m_pOpcUaClient->alarmState() == true)
     {
         QMessageBox messageBox;
+        m_pFrequencyDisplay->setStateColor("red");
         messageBox.setWindowIcon(QIcon(":/image/components/warning.png"));
         messageBox.setWindowTitle("警告");
-        messageBox.setText("请点击确认按钮复位设备报警。");
-        if(messageBox.exec())
-            m_pOpcUaClient->machineWriteReset(true);
+        messageBox.setText("请点击复位按钮复位设备报警。");
+        messageBox.exec();
+    }
+    else {
+        m_pFrequencyDisplay->setStateColor("green");
     }
     isPause = false;
 }
@@ -78,6 +87,11 @@ MainWindow::~MainWindow()
     }
     delete m_pOpcUaClient;
     delete m_pFrequencyDisplay;
+    delete m_pFreqXYSeries;
+    delete m_pAmpXYSeries;
+    delete m_pAmpLeftYAxis;
+    delete m_pFreqRightYAxis;
+    delete m_pTimeXAxis;
     delete ui;
 
     if(m_iTime != 0)
@@ -109,8 +123,18 @@ void MainWindow::timerEvent(QTimerEvent *event)
         if((m_SecondCounter % 100) == 0) //1sec
         {
             m_SecondCounter = 0;
-            m_pFrequencyDisplay->addData(QPointF(m_pProcessControl->m_RealTimeUpdate.m_totalTime,
-                                                 m_pProcessControl->m_RealTimeUpdate.m_frequency));
+            if(m_FreqPoints.size() > 120)
+            {
+                m_FreqPoints.removeFirst();
+                m_AmpPoints.removeFirst();
+                m_pTimeXAxis->setMax(m_pProcessControl->m_RealTimeUpdate.m_totalTime);
+                m_pTimeXAxis->setMin(m_pProcessControl->m_RealTimeUpdate.m_totalTime - 120);
+
+            }
+            m_FreqPoints.append(QPointF(m_pProcessControl->m_RealTimeUpdate.m_totalTime, m_pProcessControl->m_RealTimeUpdate.m_frequency));
+            m_AmpPoints.append(QPointF(m_pProcessControl->m_RealTimeUpdate.m_totalTime, m_pProcessControl->m_RealTimeUpdate.m_amplitude));
+            m_pFreqXYSeries->replace(m_FreqPoints);
+            m_pAmpXYSeries->replace(m_AmpPoints);
             m_pProcessControl->m_RealTimeUpdate.m_totalTime++;
             if(m_pDocument)
             {
@@ -138,6 +162,12 @@ void MainWindow::timerEvent(QTimerEvent *event)
 void MainWindow::slotFrequencyUpdate(double tmpFrequency)
 {
     m_pFrequencyDisplay->setResonanceFrequency(tmpFrequency);
+}
+
+void MainWindow::slotInputAmplitudeChanged(double inputAmplitude)
+{
+    m_pProcessControl->processData.amplitudeSetting = inputAmplitude;
+    m_pProcessControl->SetNewUpdateAmplitude();
 }
 
 void MainWindow::slotStart()
@@ -255,6 +285,8 @@ void MainWindow::slotStart()
     }
     m_pFrequencyDisplay->setEditValid(false);
     m_SecondCounter = 0;
+    m_FreqPoints.clear();
+    m_AmpPoints.clear();
     m_iTime = this->startTimer(10);
 }
 
@@ -301,20 +333,43 @@ void MainWindow::slotCloseClicked()
     this->close();
 }
 
+void MainWindow::slotMinimizeClicked()
+{
+    this->lower();
+}
+
 void MainWindow::slotAlarmStateUpdate(bool value)
 {
     if(value == true)
     {
+        m_pFrequencyDisplay->setStateColor("red");
         QMessageBox messageBox;
         messageBox.setWindowIcon(QIcon(":/image/components/warning.png"));
         messageBox.setWindowTitle("警告");
-        messageBox.setText("请点击确认按钮复位设备报警。");
-        if(messageBox.exec())
-            m_pOpcUaClient->machineWriteReset(true);
+        messageBox.setText("请点击复位按钮复位设备报警。");
+        messageBox.exec();
+//        if(messageBox.exec())
+//            m_pOpcUaClient->machineWriteReset(true);
+    }
+    else
+    {
+        m_pFrequencyDisplay->setStateColor("green");
     }
 }
 
-/************************************************private****************************/
+void MainWindow::slotAmplitudeCompensation()
+{
+    qDebug()<<"calibration Amplitude";
+    m_pProcessControl->CalibrationAmplitude();
+}
+
+void MainWindow::slotAlarmReset()
+{
+    qDebug()<<"alarmReset";
+    m_pOpcUaClient->machineWriteReset(true);
+}
+
+/***********************************************private****************************/
 void MainWindow::updateProcessModeAndControlLimit()
 {
     if(m_pFrequencyDisplay->ContinuousVibrationState() == true)
@@ -335,6 +390,48 @@ void MainWindow::updateProcessModeAndControlLimit()
         m_pProcessControl->processData.controlLimit = ProcessControl::BothLimit;
     else
         m_pProcessControl->processData.controlLimit = ProcessControl::Undefine;
+}
+
+void MainWindow::initializeGraphSetting()
+{
+    m_pTimeXAxis = new CustomValueAxis(m_pFrequencyDisplay);
+    m_pTimeXAxis->setMax(120);
+    m_pTimeXAxis->setMin(0);
+    m_pTimeXAxis->setTickCount(13);
+    m_pTimeXAxis->setDecimals(0);
+    m_pTimeXAxis->setColor("black");
+    m_pTimeXAxis->setTitleText("Time(s)");
+    m_pTimeXAxis->setTitleVisible(true);
+    m_pAmpLeftYAxis = new CustomValueAxis(m_pFrequencyDisplay);
+    m_pAmpLeftYAxis->setMin(0);
+    m_pAmpLeftYAxis->setMax(100);
+    m_pAmpLeftYAxis->setTickCount(11);
+    m_pAmpLeftYAxis->setDecimals(2);
+    m_pAmpLeftYAxis->setColor("#f03e3e");
+    m_pAmpLeftYAxis->setTitleText("Amplitude(%)");
+    m_pAmpLeftYAxis->setTitleVisible(true);
+    m_pFreqRightYAxis = new CustomValueAxis(m_pFrequencyDisplay);
+    m_pFreqRightYAxis->setMin(19000);
+    m_pFreqRightYAxis->setMax(21000);
+    m_pFreqRightYAxis->setTickCount(21);
+    m_pFreqRightYAxis->setDecimals(0);
+    m_pFreqRightYAxis->setColor("#4285f4");
+    m_pFreqRightYAxis->setTitleText("Frequency(Hz)");
+    m_pFreqRightYAxis->setTitleVisible(true);
+    m_pAmpXYSeries = new CustomXYSeries(m_pFrequencyDisplay);
+    m_pAmpXYSeries->setAxisX(m_pTimeXAxis);
+    m_pAmpXYSeries->setAxisY(m_pAmpLeftYAxis);
+    m_pAmpXYSeries->setColor("#f03e3e");
+    m_pAmpXYSeries->setName("Amplitude");
+    m_pFreqXYSeries = new CustomXYSeries(m_pFrequencyDisplay);
+    m_pFreqXYSeries->setAxisX(m_pTimeXAxis);
+    m_pFreqXYSeries->setAxisYRight(m_pFreqRightYAxis);
+    m_pFreqXYSeries->setColor("#4285f4");
+    m_pFreqXYSeries->setName("Frequency");
+    m_pFrequencyDisplay->chartView()->addXYSeries(m_pFreqXYSeries);
+    m_pFrequencyDisplay->chartView()->addXYSeries(m_pAmpXYSeries);
+    m_FreqPoints.clear();
+    m_AmpPoints.clear();
 }
 
 void MainWindow::stopSaveRecord()

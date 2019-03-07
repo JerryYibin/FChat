@@ -20,8 +20,14 @@ FrequencyDisplay::FrequencyDisplay(QWidget *parent) :
     connect(ui->frequencyFace, SIGNAL(pauseSig()), this, SIGNAL(pauseSig()));
     connect(ui->frequencyFace, SIGNAL(updateFrequencySig()), this, SIGNAL(updateFrequencySig()));
     connect(ui->frequencyFace, SIGNAL(endUpdateFrequencySig()), this, SIGNAL(endUpdateFrequencySig()));
+    connect(ui->frequencyFace, SIGNAL(onceTimeChanged(int)), this, SIGNAL(onceTimeChanged(int)));
+    connect(ui->frequencyFace, SIGNAL(intervalChanged(int)), this, SIGNAL(intervalChanged(int)));
+    connect(ui->frequencyFace, SIGNAL(inputAmplitudeChanged(double)), this, SIGNAL(inputAmplitudeChanged(double)));
+    connect(ui->frequencyFace, SIGNAL(amplitudeCompensation()), this, SIGNAL(amplitudeCompensation()));
+    connect(ui->frequencyFace, SIGNAL(alarmReset()), this, SIGNAL(alarmReset()));
 
-    m_pChartWidget = new CChartWidget(ui->scrollArea, this);
+    m_pChartWidget = new CustomChartView(ui->scrollArea);
+
     ui->scrollArea->setWidget(m_pChartWidget);
 
     QHBoxLayout *pLayout = new QHBoxLayout(this);
@@ -35,14 +41,7 @@ FrequencyDisplay::FrequencyDisplay(QWidget *parent) :
     pSplitter->setStretchFactor(1, 5);
     pLayout->addWidget(pSplitter);
 
-
-//    QList<QPointF> listValue;
-//    for(int i = 0; i < 121; i++)
-//    {
-//        listValue.append(QPointF(i, 19000 + i*15));
-//    }
-//    m_pChartWidget->setData(listValue);
-    connect(ui->frequencyFace, SIGNAL(stopSig()), m_pChartWidget, SLOT(slotClear()));
+//    connect(ui->frequencyFace, SIGNAL(stopSig()), m_pChartWidget, SLOT(slotClear()));
 }
 
 FrequencyDisplay::~FrequencyDisplay()
@@ -161,6 +160,11 @@ void FrequencyDisplay::resetBtState()
     ui->frequencyFace->resetBtState();
 }
 
+void FrequencyDisplay::setStateColor(const QString &color)
+{
+    ui->frequencyFace->setStateColor(color);
+}
+
 bool FrequencyDisplay::ContinuousVibrationState()
 {
     return ui->frequencyFace->ContinuousVibrationState();
@@ -186,69 +190,9 @@ bool FrequencyDisplay::workTimeVibrationState()
     return ui->frequencyFace->workTimeVibrationState();
 }
 
-bool FrequencyDisplay::setXMinValue(double minX)
+CustomChartView *FrequencyDisplay::chartView()
 {
-    return m_pChartWidget->setXMinValue(minX);
-}
-
-bool FrequencyDisplay::setXMaxValue(double maxX)
-{
-    return m_pChartWidget->setXMaxValue(maxX);
-}
-
-bool FrequencyDisplay::setXAxisValue(double minX, double maxX)
-{
-    return m_pChartWidget->setXAxisValue(minX, maxX);
-}
-
-void FrequencyDisplay::setXScalePixel(int xScalePixel)
-{
-    m_pChartWidget->setXScalePixel(xScalePixel);
-}
-
-void FrequencyDisplay::setXScaleValue(double xScaleValue)
-{
-    m_pChartWidget->setXScaleValue(xScaleValue);
-}
-
-bool FrequencyDisplay::setYMinValue(double minY)
-{
-    return m_pChartWidget->setYMinValue(minY);
-}
-
-bool FrequencyDisplay::seYtMaxValue(double maxY)
-{
-    return m_pChartWidget->seYtMaxValue(maxY);
-}
-
-bool FrequencyDisplay::setYAxisValue(double minY, double maxY)
-{
-    return m_pChartWidget->setYAxisValue(minY, maxY);
-}
-
-void FrequencyDisplay::setYScalePixel(int yPixelValue)
-{
-    m_pChartWidget->setYScalePixel(yPixelValue);
-}
-
-void FrequencyDisplay::setYScaleValue(double yScaleValue)
-{
-    m_pChartWidget->setYScaleValue(yScaleValue);
-}
-
-void FrequencyDisplay::setData(const QList<QPointF> &listData)
-{
-    m_pChartWidget->setData(listData);
-}
-
-void FrequencyDisplay::setResetScale(bool resetScale)
-{
-    m_pChartWidget->setResetScale(resetScale);
-}
-
-void FrequencyDisplay::addData(const QPointF &pointF)
-{
-    m_pChartWidget->addData(pointF);
+    return m_pChartWidget;
 }
 
 void FrequencyDisplay::paintEvent(QPaintEvent *event)

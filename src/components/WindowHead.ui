@@ -27,7 +27,7 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <property name="spacing">
-    <number>3</number>
+    <number>10</number>
    </property>
    <property name="leftMargin">
     <number>5</number>
@@ -60,9 +60,6 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Expanding</enum>
-     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>753</width>
@@ -70,6 +67,25 @@
       </size>
      </property>
     </spacer>
+   </item>
+   <item>
+    <widget class="ImageButton" name="minimizeBtn">
+     <property name="minimumSize">
+      <size>
+       <width>30</width>
+       <height>30</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>30</width>
+       <height>30</height>
+      </size>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="ImageButton" name="closeBtn">

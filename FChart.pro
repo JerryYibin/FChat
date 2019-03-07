@@ -32,6 +32,9 @@ SOURCES += \
         src/FrequencyDisplay.cpp \
         src/components/WindowHead.cpp \
         src/components/ImageButton.cpp \
+    src/components/CustomChartView.cpp \
+    src/components/CustomValueAxis.cpp \
+    src/components/CustomXYSeries.cpp \
         src/backend/opcuamachinebackend.cpp \
         src/backend/processcontrol.cpp
 
@@ -42,6 +45,9 @@ HEADERS += \
         src/FrequencyDisplay.h \
         src/components/WindowHead.h \
         src/components/ImageButton.h \
+    src/components/CustomChartView.h \
+    src/components/CustomValueAxis.h \
+    src/components/CustomXYSeries.h \
         src/backend/opcuamachinebackend.h \
         src/backend/processcontrol.h
 

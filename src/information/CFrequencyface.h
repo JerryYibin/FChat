@@ -79,6 +79,9 @@ public:
     /*重置开始暂停结束按键显示状态*/
     void resetBtState();
 
+    /*设置状态显示框的颜色*/
+    void setStateColor(const QString &color);
+
 
 protected:
     void paintEvent(QPaintEvent *event);
@@ -100,6 +103,16 @@ signals:
     void updateFrequencySig();
     /*停止扫频*/
     void endUpdateFrequencySig();
+    /*间歇性震动时单次时长改变*/
+    void onceTimeChanged(int onceTime);
+    /*间歇性震动时间歇改变*/
+    void intervalChanged(int intervalTime);
+    /*间歇性震动时输入振幅改变*/
+    void inputAmplitudeChanged(double inputAmplitude);
+    /*振幅补偿*/
+    void amplitudeCompensation();
+    /*Alarm Reset*/
+    void alarmReset();
 
 private slots:
     /*保存路径选择*/
@@ -120,6 +133,12 @@ private slots:
     void on_updateFrequencyBt_pressed();
     //停止扫频
     void on_updateFrequencyBt_released();
+
+    void on_lineEdit_onceTime_editingFinished();
+
+    void on_lineEdit_interval_editingFinished();
+
+    void on_spinBox_inputAmplitude_editingFinished();
 
 private:
     Ui::CFrequencyFace *ui;

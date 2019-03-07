@@ -10,7 +10,11 @@ WindowHead::WindowHead(QWidget *parent) :
     ui->closeBtn->setImage(":/image/components/close_normal.ico",
                            ":/image/components/close_hover.ico",
                            ":/image/components/close_normal.ico");
+    ui->minimizeBtn->setImage(":/image/components/close_normal.ico",
+                           ":/image/components/close_hover.ico",
+                           ":/image/components/close_normal.ico");
     connect(ui->closeBtn, SIGNAL(clicked()), this, SIGNAL(signalBtnClicked()));
+    connect(ui->minimizeBtn, SIGNAL(clicked()), this, SIGNAL(signalMinimizeClicked()));
 }
 
 WindowHead::~WindowHead()

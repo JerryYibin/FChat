@@ -4,7 +4,8 @@
 #include <QWidget>
 #include <QPaintEvent>
 
-#include "src/chart/CChartWidget.h"
+//#include "src/chart/CChartWidget.h"
+#include "src/components/CustomChartView.h"
 
 namespace Ui {
 class FrequencyDisplay;
@@ -65,6 +66,8 @@ public:
     /*重置开始暂停结束按键显示状态*/
     void resetBtState();
 
+    void setStateColor(const QString &color);
+
 
     /*连续震动选中状态*/
     bool ContinuousVibrationState();
@@ -77,33 +80,8 @@ public:
     /*工作时长*/
     bool workTimeVibrationState();
 
-
-    //设置X轴最小值
-    bool setXMinValue(double minX);
-    //设置X轴最大值
-    bool setXMaxValue(double maxX);
-    //设置X轴最大最小值
-    bool setXAxisValue(double minX, double maxX);
-    //设置X轴两数据之间间隔的像素
-    void setXScalePixel(int xScalePixel);
-    //设置X轴两个刻度之间的数据间隔
-    void setXScaleValue(double xScaleValue);
-    //设置Y轴最小值
-    bool setYMinValue(double minY);
-    //设置Y轴最大值
-    bool seYtMaxValue(double maxY);
-    //设置Y轴最大最小值
-    bool setYAxisValue(double minY, double maxY);
-    //设置Y轴两数据之间间隔的像素
-    void setYScalePixel(int yPixelValue);
-    //设置Y轴两个刻度之间的数据间隔
-    void setYScaleValue(double yScaleValue);
-    //设置显示数据
-    void setData(const QList<QPointF> &listData);
-    //设置是否根据数据重置XY的最大最小值，默认为true
-    void setResetScale(bool resetScale);
-    //增加数据
-    void addData(const QPointF &pointF);
+    /*获取绘图界面*/
+    CustomChartView* chartView();
 
 signals:
     /*开始信号*/
@@ -117,12 +95,23 @@ signals:
     /*停止扫频*/
     void endUpdateFrequencySig();
 
+    /*间歇性震动时单次时长改变*/
+    void onceTimeChanged(int onceTime);
+    /*间歇性震动时间歇改变*/
+    void intervalChanged(int intervalTime);
+    /*间歇性震动时输入振幅改变*/
+    void inputAmplitudeChanged(double inputAmplitude);
+    /*振幅补偿*/
+    void amplitudeCompensation();
+    /*Alarm Reset*/
+    void alarmReset();
+
 protected:
     void paintEvent(QPaintEvent *event);
 
 private:
     Ui::FrequencyDisplay *ui;
-    CChartWidget *m_pChartWidget;
+    CustomChartView *m_pChartWidget;
 };
 
 #endif // FREQUENCYDISPLAY_H
