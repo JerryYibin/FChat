@@ -99,6 +99,15 @@ bool ProcessControl::CheckStrategyProcess()
     /**************************1 step ***********************************/
     switch(processData.controlLimit)
     {
+    case ProcessControl::BothLimit:
+        if(m_RealTimeUpdate.m_totalTime > 5)
+        {
+            if(m_RealTimeUpdate.m_frequency < processData.lowerFrequencyLimit)
+            bResult = false;
+        }
+        if(m_RealTimeUpdate.m_totalTime > processData.upperTimeLimit)
+            bResult = false;
+        break;
     case ProcessControl::FrequencyLimit:
         if(m_RealTimeUpdate.m_totalTime > 5)
         {
@@ -108,11 +117,6 @@ bool ProcessControl::CheckStrategyProcess()
         break;
     case ProcessControl::TimeLimit:
         if(m_RealTimeUpdate.m_totalTime > processData.upperTimeLimit)
-            bResult = false;
-        break;
-    case ProcessControl::BothLimit:
-        if((m_RealTimeUpdate.m_frequency < processData.lowerFrequencyLimit) ||
-           (m_RealTimeUpdate.m_totalTime > processData.upperTimeLimit))
             bResult = false;
         break;
     default:

@@ -95,6 +95,21 @@ void FrequencyDisplay::setEditValid(bool valid)
     ui->frequencyFace->setEditvaild(valid);
 }
 
+void FrequencyDisplay::setStartBtnEditValid()
+{
+    ui->frequencyFace->setStartEditValid();
+}
+
+void FrequencyDisplay::setPauseBtnEditValue()
+{
+    ui->frequencyFace->setPauseEditValid();
+}
+
+void FrequencyDisplay::setStopBtnEditValue()
+{
+    ui->frequencyFace->setStopEditValid();
+}
+
 void FrequencyDisplay::chooseCvn()
 {
     ui->frequencyFace->chooseCvn();

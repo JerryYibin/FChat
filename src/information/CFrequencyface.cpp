@@ -94,7 +94,7 @@ void CFrequencyFace::setEditvaild(bool valid)
     ui->lineEdit_serialNum->setReadOnly(!valid);
     ui->lineEdit_savePath->setReadOnly(!valid);
     this->setBtnEnabled(ui->savePathBt, valid);
-    this->setBtnEnabled(ui->amplitudeCompensation, valid);
+    this->setBtnEnabled(ui->amplitudeCompensation, !valid);
     this->setBtnEnabled(ui->alarmReset, valid);
     ui->cvnButton->setEnabled(valid);
     ui->pvnButton->setEnabled(valid);
@@ -126,6 +126,55 @@ void CFrequencyFace::setEditvaild(bool valid)
     ui->lineEdit_paramTwo->setReadOnly(!valid);
     this->setBtnEnabled(ui->startBt, valid);
     this->setBtnEnabled(ui->updateFrequencyBt, valid);
+}
+
+void CFrequencyFace::setStartEditValid()
+{
+
+}
+
+void CFrequencyFace::setPauseEditValid()
+{
+    ui->lineEdit_serialNum->setReadOnly(!false);
+    ui->lineEdit_savePath->setReadOnly(!false);
+    this->setBtnEnabled(ui->savePathBt, false);
+    this->setBtnEnabled(ui->amplitudeCompensation, !false);
+    this->setBtnEnabled(ui->alarmReset, false);
+    ui->cvnButton->setEnabled(false);
+    ui->pvnButton->setEnabled(false);
+
+    ui->ivnButton->setEnabled(false);
+    ui->changeProperty->setEnabled(false);
+    if((ui->ivnButton->isChecked() || ui->cvnButton->isChecked()))
+    {
+        if(!ui->changeProperty->isChecked())
+        {
+            ui->lineEdit_onceTime->setReadOnly(!false);
+            ui->lineEdit_interval->setReadOnly(!false);
+            ui->spinBox_inputAmplitude->setReadOnly(!false);
+        }
+    }
+    else {
+        ui->lineEdit_onceTime->setReadOnly(!false);
+        ui->lineEdit_interval->setReadOnly(!false);
+        ui->spinBox_inputAmplitude->setReadOnly(!false);
+    }
+
+    ui->lineEdit_zhenDong->setReadOnly(!false);
+    this->setBtnEnabled(ui->zhendongBt, false);
+    ui->folBox->setEnabled(false);
+    ui->lineEdit_offline->setReadOnly(!false);
+    ui->wtmBox_2->setEnabled(false);
+    ui->lineEdit_worktotaltime->setReadOnly(!false);
+    ui->lineEdit_paramOne->setReadOnly(!false);
+    ui->lineEdit_paramTwo->setReadOnly(!false);
+    this->setBtnEnabled(ui->startBt, true);
+    this->setBtnEnabled(ui->updateFrequencyBt, false);
+}
+
+void CFrequencyFace::setStopEditValid()
+{
+
 }
 
 void CFrequencyFace::chooseCvn()

@@ -38,6 +38,12 @@ public:
     void setResonanceFrequency(double resonanceFrequency);
     /*设置界面是否可编辑*/
     void setEditvaild(bool valid);
+    /*Set only for Start button*/
+    void setStartEditValid();
+    /*Set only for Pause button */
+    void setPauseEditValid();
+    /*Set only for Stop button */
+    void setStopEditValid();
     //选中连续振动
     void chooseCvn();
     //选中间歇性振动

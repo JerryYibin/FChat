@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowFlags(Qt::FramelessWindowHint);
     this->setWindowTitle("超高频超声波振动系统");
     this->setWindowIcon(QIcon(":/image/components/frequency.png"));
-    ui->headTitle->setTitle("超高频超声波振动系统  1.0.1");
+    ui->headTitle->setTitle("超高频超声波振动系统  1.0.2");
     ui->headTitle->setImage(QImage(":/image/components/frequency.png"));
     connect(ui->headTitle, SIGNAL(signalBtnClicked()), this, SLOT(slotCloseClicked()));
     connect(ui->headTitle, SIGNAL(signalMinimizeClicked()), this, SLOT(slotMinimizeClicked()));
@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_pFrequencyDisplay, SIGNAL(amplitudeCompensation()), this, SLOT(slotAmplitudeCompensation()));
     connect(m_pFrequencyDisplay, SIGNAL(alarmReset()), this, SLOT(slotAlarmReset()));
     connect(m_pFrequencyDisplay, SIGNAL(inputAmplitudeChanged(double)), this, SLOT(slotInputAmplitudeChanged(double)));
-
+    m_pFrequencyDisplay->setEditValid(true);
     initializeGraphSetting();
 
     m_pOpcUaClient = OpcUaMachineBackend::Instance(this);
@@ -62,6 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_pProcessControl, SIGNAL(signalResonanceFrequency(double)), this, SLOT(slotFrequencyUpdate(double)));
     connect(m_pOpcUaClient, SIGNAL(alarmOnlyReadChanged(bool)), this, SLOT(slotAlarmStateUpdate(bool)));
     m_SecondCounter = 0;
+    m_pFrequencyDisplay->setStateColor("blue");
     if(m_pOpcUaClient->alarmState() == true)
     {
         QMessageBox messageBox;
@@ -70,9 +71,6 @@ MainWindow::MainWindow(QWidget *parent) :
         messageBox.setWindowTitle("警告");
         messageBox.setText("请点击复位按钮复位设备报警。");
         messageBox.exec();
-    }
-    else {
-        m_pFrequencyDisplay->setStateColor("green");
     }
     isPause = false;
 }
@@ -117,6 +115,7 @@ void MainWindow::timerEvent(QTimerEvent *event)
         {
             m_pFrequencyDisplay->setEditValid(true);
             stopSaveRecord();
+            m_pFrequencyDisplay->setStateColor("blue");
             return;
         }
 
@@ -184,8 +183,12 @@ void MainWindow::slotStart()
     }
     if(isPause == true)
     {
+        isPause = false;
         if(m_pProcessControl->processData.processMode == ProcessControl::ContinueMode)
             m_pOpcUaClient->machineWriteRun(true);
+        m_pFrequencyDisplay->setEditValid(false);
+        m_iTime = this->startTimer(10);
+        m_pFrequencyDisplay->setStateColor("green");
         return;
     }
     updateProcessModeAndControlLimit();
@@ -287,7 +290,9 @@ void MainWindow::slotStart()
     m_SecondCounter = 0;
     m_FreqPoints.clear();
     m_AmpPoints.clear();
+
     m_iTime = this->startTimer(10);
+    m_pFrequencyDisplay->setStateColor("green");
 }
 
 void MainWindow::slotStop()
@@ -296,8 +301,13 @@ void MainWindow::slotStop()
     if(!m_pOpcUaClient->connected())
         return;
     stopSaveRecord();
+    m_pProcessControl->m_RealTimeUpdate.m_totalTime = 0;
     for(int i = 0; i < 5; i++)
         m_pOpcUaClient->machineWriteRun(false);
+    m_pFrequencyDisplay->setStateColor("blue");
+    m_pTimeXAxis->setMax(120);
+    m_pTimeXAxis->setMin(0);
+    isPause = false;
 }
 
 void MainWindow::slotPause()
@@ -310,9 +320,10 @@ void MainWindow::slotPause()
         m_iTime = 0;
         isPause = true;
     }
-    m_pFrequencyDisplay->setEditValid(true);
+    m_pFrequencyDisplay->setPauseBtnEditValue();
     for(int i = 0; i < 5; i++)
         m_pOpcUaClient->machineWriteRun(false);
+    m_pFrequencyDisplay->setStateColor("blue");
 }
 
 void MainWindow::slotResonanceFrequencyPressed()
@@ -353,7 +364,7 @@ void MainWindow::slotAlarmStateUpdate(bool value)
     }
     else
     {
-        m_pFrequencyDisplay->setStateColor("green");
+        m_pFrequencyDisplay->setStateColor("blue");
     }
 }
 
@@ -367,6 +378,7 @@ void MainWindow::slotAlarmReset()
 {
     qDebug()<<"alarmReset";
     m_pOpcUaClient->machineWriteReset(true);
+    m_pFrequencyDisplay->setStateColor("blue");
 }
 
 /***********************************************private****************************/
@@ -381,13 +393,13 @@ void MainWindow::updateProcessModeAndControlLimit()
     else
         m_pProcessControl->processData.processMode = ProcessControl::ContinueMode;
 
-    if(m_pFrequencyDisplay->FrequencyOlVibrationState() == true)
+    if((m_pFrequencyDisplay->FrequencyOlVibrationState() == true) &&
+            (m_pFrequencyDisplay->workTimeVibrationState() == true))
+        m_pProcessControl->processData.controlLimit = ProcessControl::BothLimit;
+    else if(m_pFrequencyDisplay->FrequencyOlVibrationState() == true)
         m_pProcessControl->processData.controlLimit = ProcessControl::FrequencyLimit;
     else if(m_pFrequencyDisplay->workTimeVibrationState() == true)
         m_pProcessControl->processData.controlLimit = ProcessControl::TimeLimit;
-    else if((m_pFrequencyDisplay->FrequencyOlVibrationState() == true) &&
-            (m_pFrequencyDisplay->workTimeVibrationState() == true))
-        m_pProcessControl->processData.controlLimit = ProcessControl::BothLimit;
     else
         m_pProcessControl->processData.controlLimit = ProcessControl::Undefine;
 }
@@ -432,6 +444,8 @@ void MainWindow::initializeGraphSetting()
     m_pFrequencyDisplay->chartView()->addXYSeries(m_pAmpXYSeries);
     m_FreqPoints.clear();
     m_AmpPoints.clear();
+    m_pFreqXYSeries->replace(m_FreqPoints);
+    m_pAmpXYSeries->replace(m_AmpPoints);
 }
 
 void MainWindow::stopSaveRecord()

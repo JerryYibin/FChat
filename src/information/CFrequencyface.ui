@@ -783,6 +783,9 @@ QRadioButton::indicator::unchecked{ image: url(:/image/components/uncheck.png);}
           <property name="checked">
            <bool>true</bool>
           </property>
+          <property name="autoExclusive">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
         <item>
@@ -831,6 +834,9 @@ QRadioButton::indicator::unchecked{ image: url(:/image/components/uncheck.png);}
           <property name="text">
            <string>工作时长</string>
           </property>
+          <property name="autoExclusive">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
         <item>
@@ -847,6 +853,18 @@ background-color: rgb(5, 42, 64);</string>
           </property>
           <property name="text">
            <string>600000</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_15">
+          <property name="font">
+           <font>
+            <pointsize>20</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>(s)</string>
           </property>
          </widget>
         </item>
