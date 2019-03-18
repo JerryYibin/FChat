@@ -4,12 +4,12 @@
 #include <QPointF>
 #include <QMessageBox>
 #include <QIcon>
-
+QString MainWindow::constHistoryPath = "";
+QString MainWindow::constHistoryFileName = "";
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    m_iTime(0),
-    m_pDocument(nullptr)
+    m_iTime(0)
 {
     ui->setupUi(this);
 //    this->setWindowFlag(Qt::WindowMinMaxButtonsHint, false);
@@ -135,25 +135,9 @@ void MainWindow::timerEvent(QTimerEvent *event)
             m_pFreqXYSeries->replace(m_FreqPoints);
             m_pAmpXYSeries->replace(m_AmpPoints);
             m_pProcessControl->m_RealTimeUpdate.m_totalTime++;
-            if(m_pDocument)
-            {
-                m_pDocument->write("A" + QString::number(m_iDocumentCurrentRow),
-                                   m_pProcessControl->m_RealTimeUpdate.m_amplitude);
-                m_pDocument->write("B" + QString::number(m_iDocumentCurrentRow),
-                                   m_pProcessControl->m_RealTimeUpdate.m_frequency);
-                m_pDocument->write("C" + QString::number(m_iDocumentCurrentRow),
-                                   m_pProcessControl->m_RealTimeUpdate.m_totalTime);
-                m_pDocument->write("D" + QString::number(m_iDocumentCurrentRow),
-                                   QDateTime::currentDateTime().toString("yyyy/MM/d hh:mm:ss:zzz"));
-                ++m_iDocumentCurrentRow;
-
-                if(m_SecondCounter % 1000 == 0) //10sec
-                {
-                    m_pDocument->write("D1", "文件保存时间:\n"
-                                       + QDateTime::currentDateTime().toString("yyyy/MM/d hh:mm:ss:zzz"));
-                    m_pDocument->save();
-                }
-            }
+            qInfo()<<m_pProcessControl->m_RealTimeUpdate.m_amplitude<<" "
+                  <<m_pProcessControl->m_RealTimeUpdate.m_frequency<<" "
+                 <<m_pProcessControl->m_RealTimeUpdate.m_totalTime;
         }
     }
 }
@@ -260,28 +244,6 @@ void MainWindow::slotStart()
         m_pOpcUaClient->machineWriteRun(true);
 //    if(m_pProcessControl->processData.processMode == ProcessControl::IntervalMode)
 
-
-    if(m_pDocument)
-    {
-        delete m_pDocument;
-    }
-    m_pDocument = new QXlsx::Document(m_pProcessControl->processData.RecordSavingPath
-                                      + "\\"
-                                      + QDateTime::currentDateTime().toString("yyyyMMddhhmmsszzz")
-                                      + ".xlsx");
-    m_pDocument->write("A1", "试件\n名称:");
-    m_pDocument->write("B1", m_pProcessControl->processData.serialNum);
-    m_pDocument->write("C1", "文件建立时间:\n"
-                       + QDateTime::currentDateTime().toString("yyyy/MM/d hh:mm:ss:zzz"));
-    m_pDocument->write("D1", "文件保存时间:\n"
-                       + QDateTime::currentDateTime().toString("yyyy/MM/d hh:mm:ss:zzz"));
-    m_pDocument->write("A3", "实际振幅（um）");
-    m_pDocument->write("B3", "实际频率（Hz）");
-    m_pDocument->write("C3", "累计时长（s）");
-    m_pDocument->write("D3", "采集时间");
-    m_pDocument->save();
-    m_iDocumentCurrentRow = 4;
-
     if(m_iTime != 0)
     {
         this->killTimer(m_iTime);
@@ -293,6 +255,26 @@ void MainWindow::slotStart()
 
     m_iTime = this->startTimer(10);
     m_pFrequencyDisplay->setStateColor("green");
+
+    constHistoryPath = m_pProcessControl->processData.RecordSavingPath + "/log";
+    QDir dir(constHistoryPath);
+    if(!dir.exists())
+    {
+        dir.mkdir(dir.absolutePath());
+    }
+    constHistoryFileName = constHistoryPath + "/" + QDateTime::currentDateTime().toString("yyyyMMddhhmmss") + ".log";
+    QString strModuleName = QString("Module Name: %1").arg(m_pProcessControl->processData.serialNum);
+    QString strHeader = QString("%1 %2 %3 %4").arg("Actual Amplitude(%)").arg("Actual Frequency(Hz)").arg("Total Work Time(s)").arg("Sampled Time");
+
+    // 输出信息至文件中（读写、追加形式）
+    QFile file(constHistoryFileName);
+    file.open(QIODevice::ReadWrite | QIODevice::Append);
+    QTextStream stream(&file);
+    stream << strModuleName << "\r\n";
+    stream << strHeader << "\r\n";
+    file.flush();
+    file.close();
+    qInstallMessageHandler(MainWindow::myMessageOutput);
 }
 
 void MainWindow::slotStop()
@@ -448,6 +430,57 @@ void MainWindow::initializeGraphSetting()
     m_pAmpXYSeries->replace(m_AmpPoints);
 }
 
+void MainWindow::myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    Q_UNUSED(context)
+    // 加锁
+    static QMutex mutex;
+    mutex.lock();
+
+    QByteArray localMsg = msg.toLocal8Bit();
+
+    QString strMsg("");
+    int tmptype = type;
+    bool isNeed2Record = false;
+    switch(tmptype)
+    {
+    case QtDebugMsg:
+        strMsg = QString("Debug:");
+        break;
+    case QtWarningMsg:
+        strMsg = QString("Warning:");
+        break;
+    case QtCriticalMsg:
+        strMsg = QString("Critical:");
+        break;
+    case QtFatalMsg:
+        strMsg = QString("Fatal:");
+        break;
+    case QtInfoMsg:
+        strMsg = QString("Record:");
+        isNeed2Record = true;
+        break;
+    }
+    if(isNeed2Record == true)
+    {
+
+        // 设置输出信息格式
+        QString strDateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss:zzz");
+        QString strMessage = QString("%1 %2").arg(localMsg.constData()).arg(strDateTime);
+
+        // 输出信息至文件中（读写、追加形式）
+        QFile file(constHistoryFileName);
+        file.open(QIODevice::ReadWrite | QIODevice::Append);
+        QTextStream stream(&file);
+        stream << strMessage << "\r\n";
+        file.flush();
+        file.close();
+    }
+
+    // 解锁
+    mutex.unlock();
+}
+
 void MainWindow::stopSaveRecord()
 {
     if(m_iTime != 0)
@@ -459,14 +492,14 @@ void MainWindow::stopSaveRecord()
         m_pProcessControl->m_RealTimeUpdate.m_amplitude = 0;
     }
 
-    if(m_pDocument)
-    {
-        m_pDocument->write("D1", "文件保存时间:\n"
-                           + QDateTime::currentDateTime().toString("yyyy/MM/d hh:mm:ss:zzz"));
-        m_pDocument->save();
-        delete m_pDocument;
-        m_pDocument = nullptr;
-    }
-    m_iDocumentCurrentRow = 4;
+//    if(m_pDocument)
+//    {
+//        m_pDocument->write("D1", "文件保存时间:\n"
+//                           + QDateTime::currentDateTime().toString("yyyy/MM/d hh:mm:ss:zzz"));
+//        m_pDocument->save();
+//        delete m_pDocument;
+//        m_pDocument = nullptr;
+//    }
+//    m_iDocumentCurrentRow = 4;
 }
 

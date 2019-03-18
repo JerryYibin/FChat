@@ -863,6 +863,9 @@ background-color: rgb(5, 42, 64);</string>
             <pointsize>20</pointsize>
            </font>
           </property>
+          <property name="styleSheet">
+           <string notr="true">border:0px solid #0079c1;</string>
+          </property>
           <property name="text">
            <string>(s)</string>
           </property>

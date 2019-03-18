@@ -9,7 +9,6 @@
 #include "src/components/CustomValueAxis.h"
 #include "src/backend/opcuamachinebackend.h"
 #include "src/backend/processcontrol.h"
-#include "xlsxdocument.h"
 
 namespace Ui {
 class MainWindow;
@@ -34,8 +33,6 @@ private:
     FrequencyDisplay *m_pFrequencyDisplay;
     OpcUaMachineBackend* m_pOpcUaClient;
     ProcessControl* m_pProcessControl;
-    QXlsx::Document *m_pDocument;
-    int             m_iDocumentCurrentRow;
     bool isPause;
     CustomValueAxis *m_pTimeXAxis;
     CustomValueAxis *m_pAmpLeftYAxis;
@@ -44,6 +41,8 @@ private:
     CustomXYSeries *m_pAmpXYSeries;
     QList<QPointF> m_FreqPoints;
     QList<QPointF> m_AmpPoints;
+    static QString constHistoryPath;
+    static QString constHistoryFileName;
 
 public slots:
     void slotFrequencyUpdate(double tmpFrequency);
@@ -62,6 +61,7 @@ public slots:
 private:
     void updateProcessModeAndControlLimit();
     void initializeGraphSetting();
+    static void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 public:
     void stopSaveRecord();
 };

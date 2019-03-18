@@ -6,5 +6,13 @@
         <file>image/components/check.png</file>
         <file>image/components/uncheck.png</file>
         <file>image/components/warning.png</file>
+        <file>image/components/close-circle.png</file>
+        <file>image/components/close-circle-fill.png</file>
+        <file>image/components/minus-circle.png</file>
+        <file>image/components/minus-circle-fill.png</file>
+        <file>image/components/blue-close-circle.png</file>
+        <file>image/components/blue-close-circle-fill.png</file>
+        <file>image/components/blue-minus-circle.png</file>
+        <file>image/components/blue-minus-circle-fill.png</file>
     </qresource>
 </RCC>
