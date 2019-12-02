@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowFlags(Qt::FramelessWindowHint);
     this->setWindowTitle("超高频超声波振动系统");
     this->setWindowIcon(QIcon(":/image/components/frequency.png"));
-    ui->headTitle->setTitle("超高频超声波振动系统  1.0.3");
+    ui->headTitle->setTitle("超高频超声波振动系统  1.0.4");
     ui->headTitle->setImage(QImage(":/image/components/frequency.png"));
     connect(ui->headTitle, SIGNAL(signalBtnClicked()), this, SLOT(slotCloseClicked()));
     connect(ui->headTitle, SIGNAL(signalMinimizeClicked()), this, SLOT(slotMinimizeClicked()));

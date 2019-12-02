@@ -56,7 +56,8 @@ void CFrequencyFace::setIntermittentvibrationInfo(const int onceTime, const int 
 
 void CFrequencyFace::setTheActualParameters(const double amplitude,const double frequency, const int totalTime)
 {
-    ui->label_amplitude->setText(QString::number(amplitude));
+    ui->label_amplitude->setText(QString::number(amplitude, 'f', 1));
+//    ui->label_amplitude->setText(QString::number(amplitude));
 //    ui->label_power->setText(QString::number(power));
     ui->label_frequency->setText(QString::number(frequency));
     ui->label_totalTime->setText(QString::number(totalTime));
