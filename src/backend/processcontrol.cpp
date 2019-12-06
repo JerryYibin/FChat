@@ -135,13 +135,14 @@ bool ProcessControl::CheckStrategyProcess()
 //            _pOpcUaClientObj->machineWriteRun(true);
         break;
     case ProcessControl::IntervalMode:
-        if(_pOpcUaClientObj->machineState() == true)
+        if(_pOpcUaClientObj->machineState() == false) //ready signal
         {
             processData.durationTimer--;
             if(processData.durationTimer == 0)
             {
                 _pOpcUaClientObj->machineWriteRun(false);
                 processData.durationTimer = processData.durationTimerBakup;
+                processData.isSonicsOn = false;
             }
         }
         else{
@@ -150,6 +151,7 @@ bool ProcessControl::CheckStrategyProcess()
             {
                 _pOpcUaClientObj->machineWriteRun(true);
                 processData.stopTimer = processData.stopTimerBakup;
+                processData.isSonicsOn = true;
             }
         }
         break;
@@ -158,7 +160,7 @@ bool ProcessControl::CheckStrategyProcess()
             processData.DelayStartTimer--;
         else
         {
-            if(_pOpcUaClientObj->machineState() == false)
+            if(_pOpcUaClientObj->machineState() == true) //Ready signal
                 _pOpcUaClientObj->machineWriteRun(true);
         }
         if(processData.durationTimer == 0)
@@ -178,7 +180,7 @@ bool ProcessControl::CheckStrategyProcess()
         }
         else
         {
-            if(_pOpcUaClientObj->machineState() == false)
+            if(_pOpcUaClientObj->machineState() == true) //Ready Signal
                 _pOpcUaClientObj->machineWriteRun(true);
             processData.durationTimer--;
         }

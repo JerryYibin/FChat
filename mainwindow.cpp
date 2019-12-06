@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowFlags(Qt::FramelessWindowHint);
     this->setWindowTitle("超高频超声波振动系统");
     this->setWindowIcon(QIcon(":/image/components/frequency.png"));
-    ui->headTitle->setTitle("超高频超声波振动系统  1.0.4");
+    ui->headTitle->setTitle("超高频超声波振动系统  1.0.5  opc.tcp://192.168.10.111:2019");
     ui->headTitle->setImage(QImage(":/image/components/frequency.png"));
     connect(ui->headTitle, SIGNAL(signalBtnClicked()), this, SLOT(slotCloseClicked()));
     connect(ui->headTitle, SIGNAL(signalMinimizeClicked()), this, SLOT(slotMinimizeClicked()));
@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     else
     {
 //        m_pOpcUaClient->connectToEndpoint("opc.tcp://127.0.0.1:49320", 0);
-        m_pOpcUaClient->connectToEndpoint("opc.tcp://192.168.0.10:2019", 0);
+        m_pOpcUaClient->connectToEndpoint("opc.tcp://192.168.10.111:2019", 0);
     }
 
     if(!m_pOpcUaClient->connected())
@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
         QMessageBox messageBox;
         messageBox.setWindowIcon(QIcon(":/image/components/warning.png"));
         messageBox.setWindowTitle("警告");
-        messageBox.setText("请确保本机IP地址在192.168.0.x网段内，\n子网掩码255.255.255.0。");
+        messageBox.setText("请确保本机IP地址在192.168.10.x网段内，\n子网掩码255.255.255.0。");
         messageBox.exec();
     }
 
@@ -110,7 +110,6 @@ void MainWindow::timerEvent(QTimerEvent *event)
         tmpFrequency = m_pProcessControl->m_RealTimeUpdate.m_frequency;
         tmpTotalTime = m_pProcessControl->m_RealTimeUpdate.m_totalTime;
         m_pFrequencyDisplay->setTheActualParameters(tmpAmplitude, tmpFrequency, static_cast<int>(tmpTotalTime));
-
         if(m_pProcessControl->CheckStrategyProcess() == false)
         {
             m_pFrequencyDisplay->setEditValid(true);
@@ -135,9 +134,14 @@ void MainWindow::timerEvent(QTimerEvent *event)
             m_pFreqXYSeries->replace(m_FreqPoints);
             m_pAmpXYSeries->replace(m_AmpPoints);
             m_pProcessControl->m_RealTimeUpdate.m_totalTime++;
+            if(m_pProcessControl->processData.processMode == ProcessControl::IntervalMode)
+            {
+               if(m_pProcessControl->processData.isSonicsOn == false) // ready signal
+                   return;
+            }
             qInfo()<<m_pProcessControl->m_RealTimeUpdate.m_amplitude<<" "
-                  <<m_pProcessControl->m_RealTimeUpdate.m_frequency<<" "
-                 <<m_pProcessControl->m_RealTimeUpdate.m_totalTime;
+                <<m_pProcessControl->m_RealTimeUpdate.m_frequency<<" "
+                <<m_pProcessControl->m_RealTimeUpdate.m_totalTime;
         }
     }
 }
@@ -161,7 +165,7 @@ void MainWindow::slotStart()
         QMessageBox messageBox;
         messageBox.setWindowIcon(QIcon(":/image/components/warning.png"));
         messageBox.setWindowTitle("警告");
-        messageBox.setText("请确保本机IP地址在192.168.0.x网段内，\n子网掩码255.255.255.0。");
+        messageBox.setText("请确保本机IP地址在192.168.10.x网段内，\n子网掩码255.255.255.0。");
         messageBox.exec();
         return;
     }
@@ -186,6 +190,7 @@ void MainWindow::slotStart()
             m_pProcessControl->processData.durationTimer;
     m_pProcessControl->processData.stopTimerBakup =
             m_pProcessControl->processData.stopTimer;
+    m_pProcessControl->processData.isSonicsOn = false;
     m_pFrequencyDisplay->getOffline(
                 m_pProcessControl->processData.lowerFrequencyLimit);
     m_pFrequencyDisplay->getWorkTotalTime(

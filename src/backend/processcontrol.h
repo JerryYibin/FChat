@@ -50,6 +50,7 @@ public:
         QString serialNum;
         QString RecordSavingPath;
         QString ProgramAmplitudePath;
+        bool isSonicsOn;
     };
 public:
     DATA_PROCESS processData;
